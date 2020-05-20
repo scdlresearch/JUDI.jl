@@ -1,12 +1,10 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from argparse import ArgumentParser
 
 from sources import RickerSource, Receiver
 from models import Model
 
 from propagators import *
-from interface import forward_rec
 
 parser = ArgumentParser(description="Adjoint test args")
 
@@ -24,7 +22,7 @@ is_tti = args.tti
 
 
 # Model
-shape = (121, 101)
+shape = (401, 401)
 spacing = (5., 5.)
 origin = (0., 0.)
 
@@ -56,16 +54,16 @@ if is_tti:
                    vp=v0, epsilon=.09*(v-1.5), delta=.075*(v-1.5),
                    rho=1, space_order=8, dt=model.critical_dt, dm=dm)
 else:
+    modelfs = Model(shape=shape, origin=origin, spacing=spacing,
+                    vp=v, space_order=8, fs=True)
     model = Model(shape=shape, origin=origin, spacing=spacing,
-                  vp=v, space_order=8, fs=True)
-
+                  vp=v, space_order=8)
     model0 = Model(shape=shape, origin=origin, spacing=spacing, dm=dm,
-                   vp=v0, space_order=8, dt=model.critical_dt,
-                   fs=True)
+                   vp=v0, space_order=8, dt=model.critical_dt)
 
 # Time axis
 t0 = 0.
-tn = 1000.
+tn = 3000.
 dt = model.critical_dt
 nt = int(1 + (tn-t0) / dt)
 time_axis = np.linspace(t0, tn, nt)
@@ -83,8 +81,8 @@ rec_t.coordinates.data[:, 0] = np.linspace(0., (shape[0]-1)*spacing[0], num=nrec
 rec_t.coordinates.data[:, 1] = 14.
 
 # Interface (Level 1)
-d_obs = forward_rec(model, src.coordinates.data, src.data, rec_t.coordinates.data,
-                    space_order=8, free_surface=True)
+# d_obs = forward_rec(model, src.coordinates.data, src.data, rec_t.coordinates.data,
+#                     space_order=8, free_surface=True)
 
 N = 1000
 a = .003
@@ -92,7 +90,10 @@ b = .030
 freq_list = np.sort(a + (b - a) * (np.random.randint(N, size=(10,)) - 1) / (N - 1.))
 dft_sub = 1
 # Propagators (Level 2)
-d_obs, _ = forward(model, src.coordinates.data, rec_t.coordinates.data, src.data, free_surface=True)
+d_obs, _ = forward(modelfs, src.coordinates.data, rec_t.coordinates.data, src.data,
+                   free_surface=True)
+d_obs, _ = forward(model, src.coordinates.data, rec_t.coordinates.data, src.data,
+                   free_surface=False)
 
 # d_lin, _ = born(model0, src.coordinates.data, rec_t.coordinates.data,
 #                 src.data, isic=True)

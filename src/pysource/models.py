@@ -21,7 +21,7 @@ class PhysicalDomain(SubDomain):
     def define(self, dimensions):
         map_d = {d: d for d in dimensions}
         if self.fs:
-            map_d[dimensions[-1]] = ('middle',  self.so, 0)
+            map_d[dimensions[-1]] = ('middle', self.so, 0)
         return map_d
 
 
@@ -69,7 +69,7 @@ def initialize_damp(damp, nbl, fs=False):
         if not fs or d is not z:
             # left
             dim_l = SubDimension.left(name='abc_%s_l' % d.name, parent=d,
-                                    thickness=nbl)
+                                      thickness=nbl)
             pos = Abs((nbl - (dim_l - d.symbolic_min) + 1) / float(nbl))
             val = -dampcoeff * (pos - sin(2*np.pi*pos)/(2*np.pi))
             eqs += [Inc(damp.subs({d: dim_l}), val/scaling)]
@@ -99,7 +99,7 @@ class GenericModel(object):
         shape_pml = np.array(shape) + 2 * self.nbl
         if fs:
             fsdomain = FSDomain(space_order//2)
-            physdomain = PhysicalDomain(space_order//2, fs=True)
+            physdomain = PhysicalDomain(space_order//2, fs=fs)
             subdomains = (physdomain, fsdomain)
             origin_pml[-1] = origin[-1]
             shape_pml[-1] -= self.nbl

@@ -4,7 +4,7 @@ from wave_utils import (wf_as_src, wavefield, otf_dft, extended_src_weights,
                         extented_src, wavefield_subsampled)
 from sensitivity import grad_expr, lin_src
 
-from devito import Operator, Function, DefaultDimension, Eq
+from devito import Operator, Function
 from devito.tools import as_tuple
 
 
@@ -45,14 +45,12 @@ def forward(model, src_coords, rcv_coords, wavelet, space_order=8, save=False,
 
     # Create operator and run
     subs = model.spacing_map
-    z = u.dimensions[-1]
     op = Operator(fs + pde + geom_expr + dft + eq_save,
                   subs=subs, name="forward"+name(model))
 
     if return_op:
         return op, u, rcv
-    if free_surface:
-        from IPython import embed; embed()
+
     op()
 
     # Output
@@ -153,7 +151,7 @@ def born(model, src_coords, rcv_coords, wavelet, space_order=8,
 
     # Create operator and run
     subs = model.spacing_map
-    op = Operator(pde + geom_expr + pdel + geom_exprl + fsu + fsul,
+    op = Operator(pde + fsu + geom_expr + pdel + geom_exprl + fsul,
                   subs=subs, name="born"+name(model))
     op()
     # Output
