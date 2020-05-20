@@ -92,14 +92,14 @@ class GenericModel(object):
         self.shape = shape
         self.nbl = int(nbl)
         self.origin = tuple([dtype(o) for o in origin])
-
+        self.fs = fs
         # Origin of the computational domain with boundary to inject/interpolate
         # at the correct index
         origin_pml = [dtype(o - s*nbl) for o, s in zip(origin, spacing)]
         shape_pml = np.array(shape) + 2 * self.nbl
         if fs:
-            fsdomain = FSDomain(2*space_order)
-            physdomain = PhysicalDomain(2*space_order, fs=True)
+            fsdomain = FSDomain(space_order//2)
+            physdomain = PhysicalDomain(space_order//2, fs=True)
             subdomains = (physdomain, fsdomain)
             origin_pml[-1] = origin[-1]
             shape_pml[-1] -= self.nbl
@@ -119,6 +119,12 @@ class GenericModel(object):
             self.damp = 1
             self._physical_parameters = []
 
+    @property
+    def padsizes(self):
+        padsizes = [(self.nbl, self.nbl) for _ in range(self.dim-1)]
+        padsizes.append((0 if self.fs else self.nbl, self.nbl))
+        return padsizes
+
     def physical_params(self, **kwargs):
         """
         Return all set physical parameters and update to input values if provided
@@ -136,7 +142,7 @@ class GenericModel(object):
         if isinstance(field, np.ndarray):
             function = Function(name=name, grid=self.grid, space_order=space_order,
                                 parameter=is_param)
-            initialize_function(function, field, self.nbl)
+            initialize_function(function, field, self.padsizes)
         else:
             return field
         self._physical_parameters.append(name)

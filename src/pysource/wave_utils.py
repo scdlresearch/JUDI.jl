@@ -146,7 +146,7 @@ def extended_src_weights(model, wavelet, v):
     return w_out, [Eq(w_out, w_out + wf*wavelett)]
 
 
-def freesurface(model, pde):
+def freesurface(model, pde, u):
     """
     Generate the stencil that mirrors the field as a free surface modeling for
     the acoustic wave equation
@@ -161,17 +161,20 @@ def freesurface(model, pde):
         Whether it is forward or backward propagation (in time)
     """
     fs_eq = []
-    for p in pde:
+    for p, wf in zip(pde, as_tuple(u)):
         lhs = p.lhs
         rhs = p.rhs.evaluate
         # Add modulo replacements to to rhs
         z = model.grid.dimensions[-1]
+        zfs = model.grid.subdomains['fsdomain'].dimensions[-1]
+
         funcs = retrieve_functions(rhs.evaluate)
         mapper = {}
         for f in funcs:
-            if (f.indices[-1] - z).as_coeff_Mul()[0] < 0:
-                s = sign(f.indices[-1]).subs({z: model.grid.subdomains['fsdomain'].dimensions[-1]})
-                mapper.update({f: s * f.subs({f.indices[-1]: INT(abs(f.indices[-1]))})})
+            zind = f.indices[-1] 
+            if (zind - z).as_coeff_Mul()[0] < 0:
+                s = sign(zind.subs({z: zfs, z.spacing: 1}))
+                mapper.update({f: s * f.subs({zind: INT(abs(zind))})})
         fs_eq.append(Eq(lhs, rhs.subs(mapper), subdomain=model.grid.subdomains['fsdomain']))
     return fs_eq
 

@@ -25,7 +25,7 @@ is_tti = args.tti
 
 # Model
 shape = (121, 101)
-spacing = (10., 10.)
+spacing = (5., 5.)
 origin = (0., 0.)
 
 v = np.empty(shape, dtype=np.float32)
@@ -71,16 +71,16 @@ nt = int(1 + (tn-t0) / dt)
 time_axis = np.linspace(t0, tn, nt)
 
 # Source
-f1 = 0.010  # kHz
+f1 = 0.030  # kHz
 src = RickerSource(name='src', grid=model.grid, f0=f1, time=time_axis)
 src.coordinates.data[0, :] = np.array(model.domain_size) * 0.5
-src.coordinates.data[0, -1] = 20.
+src.coordinates.data[0, -1] = 9.0
 
 # Receiver for observed data
 nrec = shape[0]
 rec_t = Receiver(name='rec_t', grid=model.grid, npoint=nrec, ntime=nt)
 rec_t.coordinates.data[:, 0] = np.linspace(0., (shape[0]-1)*spacing[0], num=nrec)
-rec_t.coordinates.data[:, 1] = 20.
+rec_t.coordinates.data[:, 1] = 14.
 
 # Interface (Level 1)
 d_obs = forward_rec(model, src.coordinates.data, src.data, rec_t.coordinates.data,
